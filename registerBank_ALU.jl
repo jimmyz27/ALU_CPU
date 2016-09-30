@@ -16,14 +16,14 @@
 
 
 type CPU
-    A::Array{Int8,1} # reg_bank A
-    B::Array{Int8,1} # reg_bank B
+    A::Array{Int16,1} # reg_bank A
+    B::Array{Int16,1} # reg_bank B
     PC_stack::Array{Int16,1}
     active_bank::Char
     PC::Int16
     Cflag::Bool
     Zflag::Bool
-    CPU(A::Array{Int8,1},B::Array{Int8,1}) = new(A,B,Array{Int}(0),'A',0,0,0)
+    CPU(A::Array{Int16,1},B::Array{Int16,1}) = new(A,B,Array{Int}(0),'A',0,0,0)
 end
 
 
@@ -50,15 +50,13 @@ println("the flags are", newflag.carry_flag, newflag.zero_flag)
 #note these are undeclared can be anything:: may want to make sure they are
 # for sure arrays.
 
-machine = registerBank(zeros(16,8),zeros(16,8))
-for i in 1:16
-@assert (machine.A[i,1:end])== [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
-end
+#machine = registerBank(zeros(16,8),zeros(16,8))
+
 #either take the value and
 # implement load first.
 #TODO: make sure we can just store values into registers.
 #registerind
-function Load_register_constant(registerindex,constant)#instruction file i/o,  which bank is selected
+function Load_register_constant(machine::CPU,registerindex,constant)#instruction file i/o,  which bank is selected
           #CONVERT INPUT INTO ARY.
           if alu_Register=='B'
               machine.B[registerindex] = constant
@@ -70,7 +68,7 @@ function Load_register_constant(registerindex,constant)#instruction file i/o,  w
           end
   end
 
-  function Load_register_register(register1Index, register2Index)
+  function Load_register_register(machine::CPU,register1Index, register2Index)
      if alu_Register=='B'
         machine.B[register1Index] = machine.B[register2Index]
       #  println(machine.B[registerindex])
@@ -81,11 +79,11 @@ function Load_register_constant(registerindex,constant)#instruction file i/o,  w
   end
  #peters code parses the code into integer index
 
-Load_register_constant(2,86)
-Load_register_register(1,6)
-Load_register_constant(4,16)
-Load_register_register(6,5)
-Load_register_constant(9,13)
+Load_register_constant(machine,2,86)
+Load_register_register(machine,1,6)
+Load_register_constant(machine,4,16)
+Load_register_register(machine,6,5)
+Load_register_constant(machine,9,13)
 
 @assert machine.B[2] == 86
 println(machine.B[2] == 86)
@@ -96,7 +94,7 @@ println(machine.B[1] == machine.B[6])
 @assert machine.B[9] == 13
 # cornercases if the number exceeeds the digits chopp?
 
-function AND_Register_Register(register1Index,register2Index)
+function AND_Register_Register(machine::CPU,register1Index,register2Index)
           if alu_Register=='B'
               #note new julia allows & allows simbol.
               machine.B[register1Index] =  (Int(machine.B[register1Index]) & Int(machine.B[register2Index]))
@@ -108,7 +106,7 @@ function AND_Register_Register(register1Index,register2Index)
             end
 
   end
-  function AND_Register_Constant(register1Index,constant)
+  function AND_Register_Constant(machine::CPU,register1Index,constant)
   if alu_Register=='B'
       #note new julia allows & allows simbol.
       resulting_And= (Int(machine.B[register1Index]) & Int(constant))
@@ -126,10 +124,10 @@ function AND_Register_Register(register1Index,register2Index)
 
 end
 
-println("and register", AND_Register_Constant(2,4545),machine.B[2])
+println("and register", AND_Register_Constant(machine,2,4545),machine.B[2])
 
-println("and register", AND_Register_Constant(6,56),machine.B[6])
-function OR_Register_Register(register1Index,register2Index)
+println("and register", AND_Register_Constant(machine,6,56),machine.B[6])
+function OR_Register_Register(machine::CPU,register1Index,register2Index)
   if alu_Register=='B'
 
       resulting_Or = (Int(machine.B[register1Index]) | Int(machine.B[register2Index]))
@@ -147,10 +145,10 @@ function OR_Register_Register(register1Index,register2Index)
 
 end
 
-println("or register",OR_Register_Register(2,3))
-println("or register",OR_Register_Register(2,3))
-println("or register",OR_Register_Register(2,3))
-function OR_Register_Constant(register1Index,constant)
+println("or register",OR_Register_Register(machine,2,3))
+println("or register",OR_Register_Register(machine,2,3))
+println("or register",OR_Register_Register(machine,2,3))
+function OR_Register_Constant(machine::CPU,register1Index,constant)
   if alu_Register=='B'
 
       resulting_Or = (Int(machine.B[register1Index]) | Int(constant))
@@ -167,11 +165,11 @@ function OR_Register_Constant(register1Index,constant)
 
 end
 
-println("or register",OR_Register_Constant(2,56))
+println("or register",OR_Register_Constant(machine,2,56))
 #println("or register constant",OR_Register_Constant(2,45))
 #TODO : test XOR
 
-function XOR_Register_Register(register1Index,register2Index)
+function XOR_Register_Register(machine::CPU,register1Index,register2Index)
   if alu_Register=='B'
 
       resulting_XOr = (Int(machine.B[register1Index]) $ Int(machine.B[register2Index]))
@@ -188,16 +186,16 @@ end
 
 
 
-Load_register_constant(1,7)
-Load_register_constant(7,7)
-Load_register_constant(5,7)
-Load_register_register(4,7)
+Load_register_constant(machine,1,7)
+Load_register_constant(machine,7,7)
+Load_register_constant(machine,5,7)
+Load_register_register(machine,4,7)
 
 ###
 
-println("Xor register constant",XOR_Register_Register(2,16))
+println("Xor register constant",XOR_Register_Register(machine,2,16))
 
-function XOR_Register_Constant(register1Index,constant)
+function XOR_Register_Constant(machine::CPU,register1Index,constant)
   if alu_Register=='B'
 
       resulting_XOr = (Int(machine.B[register1Index]) $ Int(constant))
@@ -210,28 +208,28 @@ function XOR_Register_Constant(register1Index,constant)
 return resulting_XOr
 end
 #note the results are strings.
-resulting_xor = XOR_Register_Register(1,7)
+resulting_xor = XOR_Register_Register(machine,1,7)
 @assert (resulting_xor==0)
-@assert XOR_Register_Register(7,7)==0
-@assert XOR_Register_Register(5,7) == 0
-@assert XOR_Register_Register(4,7) == 0
+@assert XOR_Register_Register(machine,7,7)==0
+@assert XOR_Register_Register(machine,5,7) == 0
+@assert XOR_Register_Register(machine,4,7) == 0
 #################################################################
-println("Xor register constant",XOR_Register_Constant(2,45))
-@assert XOR_Register_Constant(7,7)==0
-@assert XOR_Register_Constant(5,7) == 0
-@assert XOR_Register_Constant(4,7) == 0
+println("Xor register constant",XOR_Register_Constant(machine,2,45))
+@assert XOR_Register_Constant(machine,7,7)==0
+@assert XOR_Register_Constant(machine,5,7) == 0
+@assert XOR_Register_Constant(machine,4,7) == 0
 
 
-resulting_ADD= Int,XOR_Register_Register(1,7)
+resulting_ADD= Int,XOR_Register_Register(machine,1,7)
 @assert (resulting_xor==0)
-@assert XOR_Register_Register(7,7)==0
-@assert XOR_Register_Register(5,7) == 0
-@assert XOR_Register_Register(4,7) == 0
+@assert XOR_Register_Register(machine,7,7)==0
+@assert XOR_Register_Register(machine,5,7) == 0
+@assert XOR_Register_Register(machine,4,7) == 0
 #################################################################
-println("Xor register constant",XOR_Register_Constant(2,45))
-@assert XOR_Register_Constant(7,7)==0
-@assert XOR_Register_Constant(5,7) == 0
-@assert XOR_Register_Constant(4,7) == 0
+println("Xor register constant",XOR_Register_Constant(machine,2,45))
+@assert XOR_Register_Constant(machine,7,7)==0
+@assert XOR_Register_Constant(machine,5,7) == 0
+@assert XOR_Register_Constant(machine,4,7) == 0
 
 function flagcheckADD(result)
   if result==0
@@ -247,7 +245,7 @@ function flagcheckADD(result)
   end
 end
 
-function ADD_register_constant(register1Index,constant)
+function ADD_register_constant(machine::CPU,register1Index,constant)
   if alu_Register=='B'
       resulting_ADD = (Int(machine.B[register1Index]) + Int(constant))
       println(resulting_ADD)
@@ -280,7 +278,7 @@ function ADD_register_constant(register1Index,constant)
   end
 end
 
-a = ADD_register_constant(3,255)
+a = ADD_register_constant(machine,3,255)
 println( "add register",machine.B[3], newflag.carry_flag,newflag.zero_flag)
 
 #TODO: load all the register with the resulting values.
@@ -302,7 +300,7 @@ function flagcheckSUB(result)
 end
 
 
-function SUB_Register_Constant(register1Index,constant)
+function SUB_Register_Constant(machine::CPU,register1Index,constant)
   if alu_Register=='B'
       SUB_value = (Int(machine.B[register1Index]) -Int(constant))
       println("subvalue ",SUB_value)
@@ -315,7 +313,7 @@ function SUB_Register_Constant(register1Index,constant)
 
   end
 
-SUB_Register_Constant(8,9)
+SUB_Register_Constant(machine,8,9)
 @assert machine.B[8] == -9
 @assert newflag.carry_flag == true
 @assert newflag.zero_flag == false
@@ -327,7 +325,7 @@ end
 function TESTCY()
 end
 
-function COMPARE_Register_Constant(register1Index, constant)
+function COMPARE_Register_Constant(machine::CPU,register1Index, constant)
 
   if alu_Register=='B'
       SUB_value = (Int(machine.B[register1Index]) -Int(constant))
@@ -343,7 +341,7 @@ function COMPARE_Register_Constant(register1Index, constant)
 end
 
 
-function SL0(::CPU,registerindex)#SHIFT  REGISTA OR B
+function SL0(registerindex)#SHIFT  REGISTA OR B
 #shift the elements,
 #using the shifting
 #if the this results in overflow, push to the c flag.
@@ -363,7 +361,7 @@ end
 
 end
 
-Load_register_constant(1,7)
+Load_register_constant(machine,1,7)
 a = SL0(1)
 println("theresgister1shifted",a,"carry_flag",newflag.carry_flag)
 function SR()#SHIFT REGISTERS RIGHT OR LEFT
