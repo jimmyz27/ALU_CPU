@@ -321,6 +321,20 @@ println( "add register",machine.B[4], newflag.carry_flag,newflag.zero_flag)
 #TODO: to the resulting ADDCY ?
 
 
+
+function SUBCY()
+end
+
+
+function flagcheckSUB(machine::CPU,result)
+   result==0?
+     machine.Zflag = true:
+     machine.Zflag = false
+    result<0?
+    machine.Cflag = true:
+    machine.Cflag = false
+
+end
 function SUB_Register_Constant(machine::CPU,register1Index,constant)
     alu_Register=='B'?
       machine.B[register1Index] = (Int(machine.B[register1Index]) -Int(constant)):
@@ -358,20 +372,6 @@ SUB_Register_Register(machine,8,9)
 @assert machine.Cflag == true
 @assert machine.Zflag == false
 
-function SUBCY()
-end
-
-
-function flagcheckSUB(machine::CPU,result)
-   result==0?
-     machine.Zflag = true:
-     machine.Zflag = false
-    result<0?
-    machine.Cflag = true:
-    machine.Cflag = false
-
-end
-
 # flagcheckSUB(machine,3)
 # @assert machine.Cflag == true
 function COMPARE_Register_Constant(machine::CPU,register1Index, constant)
@@ -408,33 +408,105 @@ COMPARE_Register_Constant(machine,1,0)
 @assert machine.Cflag == false
 @assert machine.Zflag == true
 
-function SL0(registerindex)#SHIFT  REGISTA OR B
+function SLZERO(registerindex)#SHIFT  REGISTA OR B
 #shift the elements,
 #using the shifting
 #if the this results in overflow, push to the c flag.
 #if bin of integer of first is one, c flag on,
 # else just shift the flag.
-if registerBank == 'B'
-resultingshift = bin(machine.B[registerindex]<<1)
-println("resulting shif is", resultingshift)
-machine.B[registerindex] = parse(Int,resultingshift[2:end],2)
- println("machine b after shift is ", machine.B[registerindex])
- newflag.carry_flag = resultingshift[0]
- return machine.B[registerindex]
+if alu_Register == 'B'
+  machine.B[registerindex]>255?
+  machine.B[registerindex] = 255:
+  print("")
+  println("before shift ",bin(machine.B[registerindex]))
+  ((machine.B[registerindex]<<1))>255? machine.Cflag = 1 : machine.Cflag = 0
+
+  resultingshift = bin(machine.B[registerindex]<<1)
+  parse(Int,resultingshift) ==0?
+  machine.Zflag = true:
+  machine.Zflag = false
+
+ println("resulting shif is", resultingshift)
+ if machine.B[registerindex]>127
+ parse(Int,resultingshift[2:end])!=0?
+ machine.B[registerindex] = parse(Int,resultingshift[2:end],2):
+ machine.B[registerindex] = 0
+ elseif machine.B[registerindex]<128
+     machine.B[registerindex] =  machine.B[registerindex]<<1
+
+ end
+return machine.B[registerindex]
 end
-if registerBank == 'A'
-resultingshift = machine.A[registerindex]<<1
-machine.A[registerindex] = resultingshift[2:end]
-newflag.carry_flag = resultingshift[0]
+if alu_Register == 'A'
+  machine.A[registerindex]>255?
+  machine.A[registerindex] = 255:
+  print("")
+  println("before shift ",bin(machine.A[registerindex]))
+  machine.A[registerindex] % 2 != 0 ? machine.Cflag = 1 : machine.Cflag = 0
+
+  resultingshift = bin(machine.A[registerindex]<<1)
+  parse(Int,resultingshift) ==0?
+  machine.Zflag = true:
+  machine.Zflag = false
+
+ println("resulting shif is", resultingshift)
+ if machine.A[registerindex]>127
+ parse(Int,resultingshift[2:end])!=0?
+ machine.A[registerindex] = parse(Int,resultingshift[2:end],2):
+ machine.A[registerindex] = 0
+ elseif machine.A[registerindex]<128
+     machine.A[registerindex] =  machine.A[registerindex]<<1
+
+ end
+ println(bin(machine.B[registerindex]))
+return machine.B[registerindex]
 end
 end
 
 
+Load_register_constant(machine,1,127)
+a = SLZERO(1)
 
-Load_register_constant(machine,1,7)
-a = SL0(1)
+println("theresgister1shifted ",a)
+println(machine.Cflag,machine.Zflag)
+function SL1(registerindex)
 
-println("theresgister1shifted ",machine.B[1])
+  if alu_Register == 'B'
+    machine.B[registerindex]>255?
+    machine.B[registerindex] = 255:
+    print("")
+    println("before shift ",bin(machine.B[registerindex]))
+    ((machine.B[registerindex]<<1)+1)>255? machine.Cflag = 1 : machine.Cflag = 0
+
+    resultingshift = bin((machine.B[registerindex]<<1)+1)
+    parse(Int,resultingshift) ==0?
+    machine.Zflag = true:
+    machine.Zflag = false
+
+   println("resulting shift is", resultingshift)
+   if machine.B[registerindex]>127
+   parse(Int,resultingshift[2:end])!=0?
+   machine.B[registerindex] = parse(Int,resultingshift[2:end],2):
+   machine.B[registerindex] = 0
+   elseif machine.B[registerindex]<128
+       machine.B[registerindex] = (machine.B[registerindex]<<1)+1
+
+   end
+   println(bin(machine.B[registerindex]))
+   println(machine.Cflag,machine.Zflag)
+  return machine.B[registerindex]
+  end
+
+
+end
+Load_register_constant(machine,3,127)
+SL1(3)
+
+
+
+
+
+
 function SR()#SHIFT REGISTERS RIGHT OR LEFT
 
 
