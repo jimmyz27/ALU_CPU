@@ -339,10 +339,31 @@ function COMPARE_Register_Constant(register1Index, constant)
 end
 
 
-function SL()#SHIFT  REGISTA OR B
+function SL0(registerindex)#SHIFT  REGISTA OR B
+#shift the elements,
+#using the shifting
+#if the this results in overflow, push to the c flag.
+#if bin of integer of first is one, c flag on,
+# else just shift the flag.
+if registerBank == "A"
+resultingshift = newregisterbank.bankA[registerindex]<<1
+newregisterbank.bankA[registerindex] = resultingshift[2:end]
+ newflag.carry_flag = resultingshift[0]
+end
+
+if registerBank == "B"
+resultingshift = newregisterbank.bankB[registerindex]<<1
+newregisterbank.bankB[registerindex] = resultingshift[2:end]
+ newflag.carry_flag = resultingshift[0]
+end
 
 end
+
+Load_register_constant(1,7)
+a = SL0(1)
+println("theresgister1shifted",a,"carry_flag",newflag.carry_flag)
 function SR()#SHIFT REGISTERS RIGHT OR LEFT
+
 end
 
 function RL()
