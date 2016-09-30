@@ -60,7 +60,7 @@ function Load_register_constant(machine::CPU,registerindex,constant)#instruction
           #CONVERT INPUT INTO ARY.
           if alu_Register=='B'
               machine.B[registerindex] = constant
-              println(machine.B[registerindex])
+              #println(machine.B[registerindex])
           end
           if alu_Register=='A'
               machine.A[registerindex] = constant
@@ -277,6 +277,38 @@ function ADD_register_constant(machine::CPU,register1Index,constant)
       # return machine.A[register1Index]
   end
 end
+function ADD_register_register(machine::CPU,register1Index,register2Index)
+  if alu_Register=='B'
+      resulting_ADD = (Int(machine.B[register1Index]) + Int(machine.B[register2Index]))
+      println(resulting_ADD)
+      #print 255
+      if resulting_ADD<=255
+      machine.B[register1Index] = resulting_ADD
+      flagcheckADD(resulting_ADD)
+      end
+
+       if resulting_ADD>255
+       machine.B[register1Index] = 255
+        flagcheckADD(resulting_ADD)
+     end
+      # return machine.A[register1Index]
+  end
+  if alu_Register=='A'
+      resulting_ADD = (Int(machine.A[register1Index]) + Int(machine.B[register2Index]))
+      println(resulting_ADD)
+      #print 255
+      if resulting_ADD<=255
+      machine.A[register1Index] = resulting_ADD
+      flagcheckADD(resulting_ADD)
+      end
+
+       if resulting_ADD>255
+       machine.A[register1Index] = 255
+        flagcheckADD(resulting_ADD)
+     end
+      # return machine.A[register1Index]
+  end
+end
 
 a = ADD_register_constant(machine,3,255)
 println( "add register",machine.B[3], newflag.carry_flag,newflag.zero_flag)
@@ -347,24 +379,31 @@ function SL0(registerindex)#SHIFT  REGISTA OR B
 #if the this results in overflow, push to the c flag.
 #if bin of integer of first is one, c flag on,
 # else just shift the flag.
+
+if registerBank == 'B'
+resultingshift = bin(machine.B[registerindex]<<1)
+machine.B[registerindex] = resultingshift[2:end]
+ println("machine b after shift is ", machine.B[registerindex])
+ newflag.carry_flag = resultingshift[0]
+ return machine.B[registerindex]
+
+end
+
 if registerBank == 'A'
 resultingshift = machine.A[registerindex]<<1
 machine.A[registerindex] = resultingshift[2:end]
- newflag.carry_flag = resultingshift[0]
+newflag.carry_flag = resultingshift[0]
+end
 end
 
-if registerBank == 'B'
-resultingshift = machine.B[registerindex]<<1
-machine.B[registerindex] = resultingshift[2:end]
- newflag.carry_flag = resultingshift[0]
-end
 
-end
 
 Load_register_constant(machine,1,7)
 a = SL0(1)
-println("theresgister1shifted",a,"carry_flag",newflag.carry_flag)
+
+println("theresgister1shifted",machine.B[1],"carry_flag",newflag.carry_flag)
 function SR()#SHIFT REGISTERS RIGHT OR LEFT
+
 
 end
 
