@@ -312,66 +312,101 @@ end
 
 a = ADD_register_constant(machine,3,255)
 println( "add register",machine.B[3], newflag.carry_flag,newflag.zero_flag)
+Load_register_constant(machine,13,9)
+b = ADD_register_register(machine,4,13)
+println( "add register",machine.B[4], newflag.carry_flag,newflag.zero_flag)
 
 #TODO: load all the register with the resulting values.
 
 #TODO: to the resulting ADDCY ?
 
-function flagcheckSUB(result)
-  if result==0
-     newflag.zero_flag = true
-  elseif result != 0
-     newflag.zero_flag = false
-  end
-  if  result<0
-
-     newflag.carry_flag = true
-  else
-    newflag.carry_flag = false
-  end
-end
-
 
 function SUB_Register_Constant(machine::CPU,register1Index,constant)
-  if alu_Register=='B'
-      SUB_value = (Int(machine.B[register1Index]) -Int(constant))
-      println("subvalue ",SUB_value)
+    alu_Register=='B'?
+      machine.B[register1Index] = (Int(machine.B[register1Index]) -Int(constant)):
+      machine.A[register1Index] = Int(machine.A[register1Index]) -Int(constant)
       #print 255
-
-      machine.B[register1Index] = SUB_value
-      flagcheckSUB(SUB_value)
+      alu_Register=='B'?
+      flagcheckSUB(machine,machine.B[register1Index]):
+       flagcheckSUB(machine,machine.A[register1Index])
       end
+
+      function SUB_Register_Register(machine::CPU,register1Index,register2Index)
+          alu_Register=='B'?
+            machine.B[register1Index] = (Int(machine.B[register1Index]) -Int(machine.B[register2Index])):
+            machine.A[register1Index] = Int(machine.A[register1Index]) -Int(machine.B[register2Index])
+            #print 255
+            alu_Register=='B'?
+            flagcheckSUB(machine,machine.B[register1Index]):
+             flagcheckSUB(machine,machine.A[register1Index])
+            end
+
+
       # return machine.A[register1Index]
 
-  end
+
 
 SUB_Register_Constant(machine,8,9)
 @assert machine.B[8] == -9
-@assert newflag.carry_flag == true
-@assert newflag.zero_flag == false
+@assert machine.Cflag == true
+@assert machine.Zflag == false
+
+Load_register_constant(machine,8,0)
+Load_register_constant(machine,9,9)
+SUB_Register_Register(machine,8,9)
+@assert machine.B[8] == -9
+@assert machine.Cflag == true
+@assert machine.Zflag == false
 
 function SUBCY()
 end
-function TEST()
-end
-function TESTCY()
+
+
+function flagcheckSUB(machine::CPU,result)
+   result==0?
+     machine.Zflag = true:
+     machine.Zflag = false
+    result<0?
+    machine.Cflag = true:
+    machine.Cflag = false
+
 end
 
+# flagcheckSUB(machine,3)
+# @assert machine.Cflag == true
 function COMPARE_Register_Constant(machine::CPU,register1Index, constant)
 
   if alu_Register=='B'
       SUB_value = (Int(machine.B[register1Index]) -Int(constant))
       println("subvalue ",SUB_value)
-      flagcheckSUB(SUB_value)
+      flagcheckSUB(machine,SUB_value)
       end
       if alu_Register=='A'
           SUB_value = (Int(machine.A[register1Index]) -Int(constant))
           println("subvalue ",SUB_value)
-          flagcheckSUB(SUB_value)
+          flagcheckSUB(machine,SUB_value)
       end
 
 end
+function COMPARE_Register_Register(machine::CPU,register1Index, register2Index)
 
+      alu_Register=='B'?
+      machine.B[register1Index] = (Int(machine.B[register1Index]) -Int(machine.B[register2Index])):
+      machine.A[register1Index]=Int(machine.A[register1Index]) -Int(machine.B[register2Index])
+
+      alu_Register=='B'?
+      flagcheckSUB(machine,machine.B[register1Index]):
+      flagcheckSUB(machine,machine.A[register1Index])
+
+      alu_Register=='B'?
+      println("subvalue ",machine.B[register1Index]):
+      println("subvalue ",machine.A[register1Index])
+
+end
+Load_register_constant(machine,1,0)
+COMPARE_Register_Constant(machine,1,0)
+@assert machine.Cflag == false
+@assert machine.Zflag == true
 
 function SL0(registerindex)#SHIFT  REGISTA OR B
 #shift the elements,
@@ -379,16 +414,14 @@ function SL0(registerindex)#SHIFT  REGISTA OR B
 #if the this results in overflow, push to the c flag.
 #if bin of integer of first is one, c flag on,
 # else just shift the flag.
-
 if registerBank == 'B'
 resultingshift = bin(machine.B[registerindex]<<1)
-machine.B[registerindex] = resultingshift[2:end]
+println("resulting shif is", resultingshift)
+machine.B[registerindex] = parse(Int,resultingshift[2:end],2)
  println("machine b after shift is ", machine.B[registerindex])
  newflag.carry_flag = resultingshift[0]
  return machine.B[registerindex]
-
 end
-
 if registerBank == 'A'
 resultingshift = machine.A[registerindex]<<1
 machine.A[registerindex] = resultingshift[2:end]
@@ -401,7 +434,7 @@ end
 Load_register_constant(machine,1,7)
 a = SL0(1)
 
-println("theresgister1shifted",machine.B[1],"carry_flag",newflag.carry_flag)
+println("theresgister1shifted ",machine.B[1])
 function SR()#SHIFT REGISTERS RIGHT OR LEFT
 
 
