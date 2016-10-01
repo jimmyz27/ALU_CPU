@@ -431,7 +431,7 @@ function SUB_Register_Constant(machine::CPU,register1Index,constant)
 
 
                   end
-
+#TODO: test andcy and subcy..
                   function SUBCY_Register_register(machine::CPU,register1Index,register2Index)
                       alu_Register=='B'?
                         machine.B[register1Index] = (Int(machine.B[register1Index]) -Int(machine.B[register2Index]))-machine.carry_flag:
@@ -473,6 +473,36 @@ function COMPARE_Register_Constant(machine::CPU,register1Index, constant)
           println("subvalue ",SUB_value)
           flagcheckSUB(machine,SUB_value)
       end
+
+end
+function COMPARECY_Register_Constant(machine::CPU,register1Index, constant)
+
+  if alu_Register=='B'
+      SUB_value = (Int(machine.B[register1Index]) -Int(constant))-machine.Cflag
+      println("subvalue ",SUB_value)
+      flagcheckSUB(machine,SUB_value)
+      end
+      if alu_Register=='A'
+          SUB_value = (Int(machine.A[register1Index]) -Int(constant))-machine.Cflag
+          println("subvalue ",SUB_value)
+          flagcheckSUB(machine,SUB_value)
+      end
+
+end
+
+function COMPARECY_Register_Register(machine::CPU,register1Index, register2Index)
+
+      alu_Register=='B'?
+      machine.B[register1Index] = (Int(machine.B[register1Index]) -Int(machine.B[register2Index])) -machine.Cflag:
+      machine.A[register1Index]=Int(machine.A[register1Index]) -Int(machine.B[register2Index])-machine.Cflag
+
+      alu_Register=='B'?
+      flagcheckSUB(machine,machine.B[register1Index]):
+      flagcheckSUB(machine,machine.A[register1Index])
+
+      alu_Register=='B'?
+      println("subvalue ",machine.B[register1Index]):
+      println("subvalue ",machine.A[register1Index])
 
 end
 function COMPARE_Register_Register(machine::CPU,register1Index, register2Index)
