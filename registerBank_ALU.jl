@@ -320,7 +320,70 @@ println( "add register",machine.B[4], newflag.carry_flag,newflag.zero_flag)
 
 #TODO: to the resulting ADDCY ?
 
+function ADDCY_register_constant(machine::CPU,register1Index,constant)
+  if alu_Register=='B'
+      resulting_ADD = (Int(machine.B[register1Index]) + Int(constant))+machine.carry_flag
+      println(resulting_ADD)
+      #print 255
+      if resulting_ADD<=255
+      machine.B[register1Index] = resulting_ADD
+      flagcheckADD(resulting_ADD)
+      end
 
+       if resulting_ADD>255
+       machine.B[register1Index] = 255
+        flagcheckADD(resulting_ADD)
+     end
+      # return machine.A[register1Index]
+  end
+  if alu_Register=='A'
+      resulting_ADD = (Int(machine.A[register1Index]) + Int(constant))+ machine.carry_flag
+      println(resulting_ADD)
+      #print 255
+      if resulting_ADD<=255
+      machine.A[register1Index] = resulting_ADD
+      flagcheckADD(resulting_ADD)
+      end
+
+       if resulting_ADD>255
+       machine.A[register1Index] = 255
+        flagcheckADD(resulting_ADD)
+     end
+      # return machine.A[register1Index]
+  end
+end
+function ADDCY_register_register(machine::CPU,register1Index,register2Index)
+  if alu_Register=='B'
+      resulting_ADD = Int(machine.B[register1Index]) + Int(machine.B[register2Index])+machine.carry_flag
+      println(resulting_ADD)
+      #print 255
+      if resulting_ADD<=255
+      machine.B[register1Index] = resulting_ADD
+      flagcheckADD(resulting_ADD)
+      end
+
+       if resulting_ADD>255
+       machine.B[register1Index] = 255
+        flagcheckADD(resulting_ADD)
+     end
+      # return machine.A[register1Index]
+  end
+  if alu_Register=='A'
+      resulting_ADD = Int(machine.A[register1Index]) + Int(machine.B[register2Index])+ machine.carry_flag
+      println(resulting_ADD)
+      #print 255
+      if resulting_ADD<=255
+      machine.A[register1Index] = resulting_ADD
+      flagcheckADD(resulting_ADD)
+      end
+
+       if resulting_ADD>255
+       machine.A[register1Index] = 255
+        flagcheckADD(resulting_ADD)
+     end
+      # return machine.A[register1Index]
+  end
+end
 
 function SUBCY()
 end
@@ -343,6 +406,8 @@ function SUB_Register_Constant(machine::CPU,register1Index,constant)
       alu_Register=='B'?
       flagcheckSUB(machine,machine.B[register1Index]):
        flagcheckSUB(machine,machine.A[register1Index])
+
+
       end
 
       function SUB_Register_Register(machine::CPU,register1Index,register2Index)
@@ -355,7 +420,29 @@ function SUB_Register_Constant(machine::CPU,register1Index,constant)
              flagcheckSUB(machine,machine.A[register1Index])
             end
 
+            function SUBCY_Register_Constant(machine::CPU,register1Index,constant)
+                alu_Register=='B'?
+                  machine.B[register1Index] = (Int(machine.B[register1Index]) -Int(constant))-machine.carry_flag:
+                  machine.A[register1Index] = Int(machine.A[register1Index]) -Int(constant)-machine.carry_flag
+                  #print 255
+                  alu_Register=='B'?
+                  flagcheckSUB(machine,machine.B[register1Index]):
+                   flagcheckSUB(machine,machine.A[register1Index])
 
+
+                  end
+
+                  function SUBCY_Register_register(machine::CPU,register1Index,register2Index)
+                      alu_Register=='B'?
+                        machine.B[register1Index] = (Int(machine.B[register1Index]) -Int(machine.B[register2Index]))-machine.carry_flag:
+                        machine.A[register1Index] = Int(machine.A[register1Index]) -Int(machine.A[register2Index])-machine.carry_flag
+                        #print 255
+                        alu_Register=='B'?
+                        flagcheckSUB(machine,machine.B[register1Index]):
+                         flagcheckSUB(machine,machine.A[register1Index])
+
+
+                        end
       # return machine.A[register1Index]
 
 
@@ -435,6 +522,8 @@ if alu_Register == 'B'
      machine.B[registerindex] =  machine.B[registerindex]<<1
 
  end
+ println(machine.Cflag,machine.Zflag)
+ println(machine.B[registerindex])
 return machine.B[registerindex]
 end
 if alu_Register == 'A'
@@ -459,18 +548,20 @@ if alu_Register == 'A'
 
  end
  println(bin(machine.B[registerindex]))
+
 return machine.B[registerindex]
 end
 end
 
-
-Load_register_constant(machine,1,127)
-a = SLZERO(1)
-
-println("theresgister1shifted ",a)
-println(machine.Cflag,machine.Zflag)
+Load_register_constant(machine,3,0)
+SLZERO(3)
+Load_register_constant(machine,3,5)
+SLZERO(3)
+Load_register_constant(machine,3,127)
+SLZERO(3)
+Load_register_constant(machine,3,255)
+SLZERO(3)
 function SL1(registerindex)
-
   if alu_Register == 'B'
     machine.B[registerindex]>255?
     machine.B[registerindex] = 255:
@@ -496,14 +587,87 @@ function SL1(registerindex)
    println(machine.Cflag,machine.Zflag)
   return machine.B[registerindex]
   end
-
-
 end
+
+
+
+Load_register_constant(machine,3,5)
+SL1(3)
 Load_register_constant(machine,3,127)
 SL1(3)
+Load_register_constant(machine,3,255)
+SL1(3)
+
+function SLA(registerindex)
+  if alu_Register == 'B'
+    machine.B[registerindex]>255?
+    machine.B[registerindex] = 255:
+    print("")
+    println("before shift ",bin(machine.B[registerindex]))
+    Carry = machine.Cflag
+    ((machine.B[registerindex]<<1)+machine.Cflag)>255? machine.Cflag = 1 : machine.Cflag = 0
+
+    resultingshift = bin((machine.B[registerindex]<<1)+Carry)
+    parse(Int,resultingshift) ==0?
+    machine.Zflag = true:
+    machine.Zflag = false
+
+   println("resulting shift is", resultingshift)
+   if machine.B[registerindex]>127
+   parse(Int,resultingshift[2:end])!=0?
+   machine.B[registerindex] = parse(Int,resultingshift[2:end],2):
+   machine.B[registerindex] = 0
+   elseif machine.B[registerindex]<128
+       machine.B[registerindex] = (machine.B[registerindex]<<1)+Carry
+
+   end
+   println(bin(machine.B[registerindex]))
+   println(machine.Cflag,machine.Zflag)
+  return machine.B[registerindex]
+  end
+end
 
 
+function SLX(registerindex)
+  if alu_Register == 'B'
+    machine.B[registerindex]>255?
+    machine.B[registerindex] = 255:
+    print("")
+    println("before shift ",bin(machine.B[registerindex]))
+    Carry = machine.Cflag
+    ((machine.B[registerindex]<<1)+machine.B[registerindex]%2)>255? machine.Cflag = 1 : machine.Cflag = 0
 
+    resultingshift = bin((machine.B[registerindex]<<1)+machine.B[registerindex]%2)
+    parse(Int,resultingshift) ==0?
+    machine.Zflag = true:
+    machine.Zflag = false
+
+   println("resulting shift is", resultingshift)
+   if machine.B[registerindex]>127
+   parse(Int,resultingshift[2:end])!=0?
+   machine.B[registerindex] = parse(Int,resultingshift[2:end],2):
+   machine.B[registerindex] = 0
+
+   elseif machine.B[registerindex]<128
+       machine.B[registerindex] = (machine.B[registerindex]<<1)+machine.B[registerindex]%2
+
+   end
+   println(bin(machine.B[registerindex]))
+   println(machine.Cflag,machine.Zflag)
+  return machine.B[registerindex]
+  end
+end
+
+Load_register_constant(machine,3,5)
+SLX(3)
+Load_register_constant(machine,3,127)
+SLX(3)
+Load_register_constant(machine,3,128)
+SLX(3)
+Load_register_constant(machine,3,255)
+SLX(3)
+Load_register_constant(machine,3,344)
+SLX(3)
 
 
 
