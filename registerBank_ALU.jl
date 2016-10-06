@@ -390,73 +390,133 @@ end
 
 
 function flagcheckSUB(machine::CPU,result)
-   result==0?
-     machine.Zflag = true:
-     machine.Zflag = false
+
+
+    result%256 == 0?
+    machine.Zflag = true:
+    machine.Zflag = false
+
     result<0?
     machine.Cflag = true:
     machine.Cflag = false
 
 end
+
 function SUB_Register_Constant(machine::CPU,register1Index,constant)
+  alu_Register=='B'?
+    result =   Int(machine.B[register1Index]) -Int(constant):
+    result =   Int(machine.A[register1Index]) -Int(constant)
+
     alu_Register=='B'?
-      machine.B[register1Index] = (Int(machine.B[register1Index]) -Int(constant)):
-      machine.A[register1Index] = Int(machine.A[register1Index]) -Int(constant)
-      #print 255
-      alu_Register=='B'?
-      flagcheckSUB(machine,machine.B[register1Index]):
-       flagcheckSUB(machine,machine.A[register1Index])
+    flagcheckSUB(machine,result):
+    flagcheckSUB(machine,result)
 
+    result = abs(result)
+    if result>255
+    result = result % 256
+    end
 
-      end
+    alu_Register =='B'?
+    machine.B[register1Index] = result:
+    machine.A[register1Index] = result
+
+end
 
       function SUB_Register_Register(machine::CPU,register1Index,register2Index)
+        alu_Register=='B'?
+          result =   (Int(machine.B[register1Index]) -Int(machine.B[register2Index])):
+          result =   (Int(machine.A[register1Index]) -Int(machine.B[register2Index]))
+
           alu_Register=='B'?
-            machine.B[register1Index] = (Int(machine.B[register1Index]) -Int(machine.B[register2Index])):
-            machine.A[register1Index] = Int(machine.A[register1Index]) -Int(machine.B[register2Index])
-            #print 255
-            alu_Register=='B'?
-            flagcheckSUB(machine,machine.B[register1Index]):
-             flagcheckSUB(machine,machine.A[register1Index])
+          flagcheckSUB(machine,result):
+          flagcheckSUB(machine,result)
+
+          result = abs(result)
+          if result>255
+          result = result % 256
+          end
+
+
+
+          alu_Register =='B'?
+          machine.B[register1Index] = result:
+          machine.A[register1Index] = result
+
+
             end
 
             function SUBCY_Register_Constant(machine::CPU,register1Index,constant)
+              alu_Register=='B'?
+                result =   (Int(machine.B[register1Index]) -Int(constant)-machine.Cflag):
+                result =   (Int(machine.A[register1Index]) -Int(constant)-machine.Cflag)
+
                 alu_Register=='B'?
-                  machine.B[register1Index] = (Int(machine.B[register1Index]) -Int(constant))-machine.carry_flag:
-                  machine.A[register1Index] = Int(machine.A[register1Index]) -Int(constant)-machine.carry_flag
-                  #print 255
-                  alu_Register=='B'?
-                  flagcheckSUB(machine,machine.B[register1Index]):
-                   flagcheckSUB(machine,machine.A[register1Index])
+                flagcheckSUB(machine,result):
+                flagcheckSUB(machine,result)
+
+                result = abs(result)
+                if result>255
+                result = result % 256
+                end
+
+
+
+                alu_Register =='B'?
+                machine.B[register1Index] = result:
+                machine.A[register1Index] = result
 
 
                   end
 #TODO: test andcy and subcy..
                   function SUBCY_Register_register(machine::CPU,register1Index,register2Index)
+                    alu_Register=='B'?
+                      result =   (Int(machine.B[register1Index]) -Int(machine.B[register2Index])-machine.Cflag):
+                      result =   (Int(machine.A[register1Index]) -Int(machine.A[register2Index])-machine.Cflag)
+
                       alu_Register=='B'?
-                        machine.B[register1Index] = (Int(machine.B[register1Index]) -Int(machine.B[register2Index]))-machine.carry_flag:
-                        machine.A[register1Index] = Int(machine.A[register1Index]) -Int(machine.A[register2Index])-machine.carry_flag
-                        #print 255
-                        alu_Register=='B'?
-                        flagcheckSUB(machine,machine.B[register1Index]):
-                         flagcheckSUB(machine,machine.A[register1Index])
+                      flagcheckSUB(machine,result):
+                      flagcheckSUB(machine,result)
+
+                      result = abs(result)
+                      if result>255
+                      result = result % 256
+                      end
+
+
+
+                      alu_Register =='B'?
+                      machine.B[register1Index] = result:
+                      machine.A[register1Index] = result
+
 
 
                         end
       # return machine.A[register1Index]
 
+machine.Cflag = true
+Load_register_constant(machine,8,0)
+SUBCY_Register_Constant(machine,8,9)
+@assert machine.B[8] == 10
+
+Load_register_constant(machine,7,0)
 
 
-SUB_Register_Constant(machine,8,9)
-@assert machine.B[8] == -9
+
+Load_register_constant(machine,8,0)
+Load_register_constant(machine,7,256)
+SUB_Register_Register(machine,8,7)
+
+@assert machine.B[8] == 0
+println("current Cflag is ",machine.Cflag)
+println("current Zflag is ",machine.Zflag)
 @assert machine.Cflag == true
-@assert machine.Zflag == false
+@assert machine.Zflag == true
 
 Load_register_constant(machine,8,0)
 Load_register_constant(machine,9,9)
 SUB_Register_Register(machine,8,9)
-@assert machine.B[8] == -9
-@assert machine.Cflag == true
+@assert machine.B[8] == 9
+println( "the C flag is now ",machine.Cflag == true)
 @assert machine.Zflag == false
 
 # flagcheckSUB(machine,3)
@@ -522,6 +582,7 @@ function COMPARE_Register_Register(machine::CPU,register1Index, register2Index)
 end
 Load_register_constant(machine,1,0)
 COMPARE_Register_Constant(machine,1,0)
+
 @assert machine.Cflag == false
 @assert machine.Zflag == true
 
@@ -656,7 +717,16 @@ function SLA(registerindex)
   return machine.B[registerindex]
   end
 end
-
+#SLA shifts all registers to the left, including the carry flag. ister_constant(machine,1,4)
+println("the carry_flag",machine.Cflag)
+Load_register_constant(machine,1,4)
+println("before the shift sla index1",machine.B[1] )
+SLA(1)
+println("after the shift sla index1",machine.B[1] )
+Load_register_constant(machine,2,7)
+SLA(2)
+Load_register_constant(machine,4,7)
+SLA(4)
 
 function SLX(registerindex)
   if alu_Register == 'B'

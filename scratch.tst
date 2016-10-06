@@ -1,0 +1,9 @@
+LOAD s0, 03
+STORE s0, (s0)
+STORE s0, 00
+FETCH s1, 00
+FETCH s2, (s1)
+OUTPUT s0, 00
+OUTPUT s1, 00
+OUTPUT s2, 00
+death: JUMP death
